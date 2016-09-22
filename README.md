@@ -10,18 +10,18 @@ The program's underlying operation relies heavily on unsupervised machine learni
 
 ### Instructions
 
-0. Request (from the bottom of the Account Settings page while logged into the dashboard) and download your Metromile data. Also you will need information about your car including:
+0. Clone this directory onto your local machine and change directories into it from the command line.
+
+1. Request (from the bottom of the Account Settings page while logged into the dashboard) and download your Metromile data. Also you will need information about your car including:
   * Tire diameter (in.)
   * Number of gears (excluding Reverse)
   * [optional] : Axle Ratio
 
-1. Unzip your MetroMile data. The directory it creates is the one you will use as the working directory for running all code in this project. If your account # was 123456789, the directory should look like: ```123456789 all_driving_data```
+2. Unzip your MetroMile data. The directory it creates should look like: ```123456789 all_driving_data``` (if your account number was 123456789).
 
-2. Change directories into this directory. ```cd 123456789 all_driving_data```
+3. Move (or copy) any or all of the contents (.csv files) from this directory to the ```metromile``` directory. 
 
-3. Copy the script ```guess_car_specs.py``` into this directory.
-
-4. Run the script from the command line:
+4. With ```metromile``` as the current working directory, run the script from the command line:
 ``` python guess_car_specs.py```
 
 For a single month of driving data of your specification the script will generate a series of visualizations then guess the gear ratios. The prompts will collect information to subset and assist the program. Here is a sample input/output from my driving history from the month 2016-08:
@@ -53,6 +53,8 @@ I found a reasonably credible place to crosscheck the program output with my veh
 ### Further Work 
 
 **The program is optimized for processing data from a manual transmission car.** Updates will be forthcoming after testing with samples from an automatic transmission car. 
+
+![alt text](images/201608_clusteredgears.png)
 
 The program is also enabled to label the original dataset with the gear assumed for each datapoint. Datapoints not found to be in the clusters corresponding to the likely gear ratios are given a 0 value to denote neutral. Right now there are many datapoints sampled belonging to this class, and it's unclear about whether this is a realistic assumption.
 
