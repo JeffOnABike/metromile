@@ -52,11 +52,12 @@ I found a reasonably credible place to crosscheck the program output with my veh
 
 ### Further Work 
 
-The program is also enabled to label the original dataset with the gear assumed for each datapoint. 
+The program is also enabled to label the original dataset with the gear assumed for each datapoint:
 
 ![alt text](images/201608_clusteredgears.png)
 
 However, there are a few issues with the labeling:
+
 1. Datapoints not found to be in the clusters corresponding to the likely gear ratios are given a 0 value to denote neutral. There are many datapoints sampled belonging to this class, as visible in the scatterplot above. Some datapoints, such as those with non-idling engine speeds but belonging outside an expected ratio of vehicle/engine speed are probably the result of clutching. It's unclear how to classify these accurately.
 
 2. The Reverse gear has a ratio very close to that of 1st gear for many vehicles. It's possible that datapoints belonging to the vehicle while in reverse are being conflated with thos eof 1st gear. 
