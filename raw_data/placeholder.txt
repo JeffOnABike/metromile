@@ -1,2 +1,0 @@
-Put your unzipped metromile .csv files in this directory. 
-Do not delete this directory.
