@@ -14,9 +14,10 @@ def find_month(month, year):
 		year: int
 			format: YYYY
 	OUTPUT:
-		best match filename in available data
+		best match filepath in available data
 	'''
-	files = os.listdir('raw_data')
+	filedir = filter(lambda x: x.endswith('all_driving_data'), os.listdir('.'))[0]
+	files = os.listdir(filedir)
 	year = datetime.now().year if not year else year
 	month = datetime.now().month if month == None else month
 	filename = str(year) + '-' + str(month).zfill(2) + '.csv'
@@ -24,18 +25,19 @@ def find_month(month, year):
 		print 'File not found. Finding another...'
 		filename = filter(lambda fn: fn.endswith('.csv'), files)[-1]
 		print 'Picking', filename
-	return 'raw_data/' + filename
+	filepath = '/'.join([filedir, filename])
+	return filepath
 
-def load_month_data(filename):
+def load_month_data(filepath):
 	'''
 	returns a dataframe of sampled driving data subset to the variables of interest
 	INPUT:
-		filename: str
+		filepath: str
 			format: YYYY-MM.csv
 	OUTPUT:
 		pandas DataFrame
 	'''
-	original_df  = pd.read_csv(filename, parse_dates=['recordDateTime'])
+	original_df  = pd.read_csv(filepath, parse_dates=['recordDateTime'])
 	cols_ofi = ['recordDateTime', 
 		'latitude', 
 		'longitude', 
@@ -198,9 +200,9 @@ def main(return_vals = False, write_data = False, savefig = False):
 	sns.set_style('whitegrid')
 	month = raw_input('Enter month number : [1, 2, ..., 12] : ') 
 	year = raw_input('Enter year (e.g. 2016) : ')
-	filename = find_month(month, year)
-	time_period = filename.split('/')[1].split('.')[0] 
-	original_df = load_month_data(filename)
+	filepath = find_month(month, year)
+	time_period = filepath.split('/')[1].split('.')[0] 
+	original_df = load_month_data(filepath)
 	visualize_df(original_df, time_period, 'original data', savefig = savefig)
 
 	moving_df = clean_original(original_df)

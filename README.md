@@ -6,7 +6,7 @@
 
 The program ```guess_car_specs.py``` guesses the gear ratios in a vehicle's transmission based on a sample of its driving data. The driving data is collected via a device plugged in the OBD-II port and warehoused by Metromile (an insurance company) and is available to customers by request. 
 
-The program's underlying operation relies heavily on an unsupervised machine learning clustering algorithm called 'mean shift'. The values of the gear ratios correspond to the N most prominent mean shift cluster centers where N is the number of gears (non-Reverse) in the vehicle's transmission. 
+The program's underlying operation relies heavily on an unsupervised machine learning clustering algorithm called 'mean shift'. The values of the gear ratios correspond to the N most populous mean shift cluster centers, where N is the number of gears (non-Reverse) in the vehicle's transmission. 
 
 ### Instructions
 
@@ -19,10 +19,10 @@ The program's underlying operation relies heavily on an unsupervised machine lea
 
 2. Unzip your MetroMile data. The directory it creates should look like: ```123456789 all_driving_data``` (if your account number was 123456789).
 
-3. Move (or copy) any or all of the contents (.csv files) from this directory to the ```metromile``` directory. 
+3. Move (or copy) this directory and all of its contents into the ```metromile``` directory. 
 
 4. With ```metromile``` as the current working directory, run the script from the command line:
-``` python guess_car_specs.py```
+```python guess_car_specs.py```
 
 For a single month of driving data of your specification the script will generate a series of visualizations then guess the gear ratios. The prompts will collect information to subset and assist the program. Here is a sample input/output from my driving history from the month 2016-08:
 
@@ -52,8 +52,15 @@ I found a reasonably credible place to crosscheck the program output with my veh
 
 ### Further Work 
 
+The program is also enabled to label the original dataset with the gear assumed for each datapoint. 
+
 ![alt text](images/201608_clusteredgears.png)
 
-The program is also enabled to label the original dataset with the gear assumed for each datapoint. Datapoints not found to be in the clusters corresponding to the likely gear ratios are given a 0 value to denote neutral. Right now there are many datapoints sampled belonging to this class, and it's unclear about whether this is a realistic assumption.
+However, there are a few issues with the labeling:
+1. Datapoints not found to be in the clusters corresponding to the likely gear ratios are given a 0 value to denote neutral. There are many datapoints sampled belonging to this class, as visible in the scatterplot above. Some datapoints, such as those with non-idling engine speeds but belonging outside an expected ratio of vehicle/engine speed are probably the result of clutching. It's unclear how to classify these accurately.
 
-Another potential issue is the Reverse gear being conflated with 1st gear (since it is often very close in gear-ratio value). It's unclear if the samples would have any real representation of datapoints collected while the vehicle is in reverse.
+2. The Reverse gear has a ratio very close to that of 1st gear for many vehicles. It's possible that datapoints belonging to the vehicle while in reverse are being conflated with thos eof 1st gear. 
+
+3. A hard cutoff on a fixed RPM is probably not realistic for separating engine-idling neutral datapoints from those belonging to a gear. For example, some low speed/low rpm datapoints may be falsely categorized as neutral instead of 1st gear. Similarly, some high speed/low rpm datapoints may be falsely categorized as top gear instead of neutral.
+
+While refining the operation of the program's classification process to better address issues 1-3 described above, a very complex combination of transformations and obscure clustering algorithms is not necessarily the answer. The answer may be simply to conservatively classify, and err on the side of 'false negatives' (over-assigning dataponts to neutral - gear 0). Later algorithms may be developed in conjunction with time-series analysis to classify the missing datapoints.
