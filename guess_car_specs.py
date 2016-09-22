@@ -6,7 +6,6 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# /Users/freyenterprise/documents/work/projects/metromile/131006779\ all_driving_data/sadie
 def find_month(month, year):
 	'''
 	INPUT:
@@ -17,14 +16,15 @@ def find_month(month, year):
 	OUTPUT:
 		best match filename in available data
 	'''
-	files = os.listdir('.')
+	files = os.listdir('raw_data')
 	year = datetime.now().year if not year else year
 	month = datetime.now().month if month == None else month
 	filename = str(year) + '-' + str(month).zfill(2) + '.csv'
 	if filename not in files:
 		print 'File not found. Finding another...'
 		filename = filter(lambda fn: fn.endswith('.csv'), files)[-1]
-	return filename
+		print 'Picking', filename
+	return 'raw_data/' + filename
 
 def load_month_data(filename):
 	'''
@@ -137,7 +137,6 @@ def label_gears(polar_df, phi_ms, n_gears):
 	'''
 	return labeled dataframe of likely gears plus the values of theta 
 	'''
-	# n_gears = 5
 	ms_cluster_centers = phi_ms.cluster_centers_[:,0]
 	ms_label_dict = dict(enumerate(ms_cluster_centers))
 	ms_label_dict = {v:k for k,v in ms_label_dict.iteritems()}
@@ -162,21 +161,26 @@ def label_gears(polar_df, phi_ms, n_gears):
 	polar_df['gear'] = polar_df['ms_label'].replace(translate_dict)
 	return polar_df.drop('ms_label', axis = 1), np.sort(gear_dict.keys())
 
-def visualize_gears(merged, time_period, savefig = True):
-	sns.lmplot(x = 'rpm', 
+def visualize_gears(merged, time_period, n_gears, savefig = True):
+	lm = sns.lmplot(x = 'rpm', 
 		y = 'vehicleSpeedSensorKmPerHour', 
 		data = merged, 
 		hue = 'gear',
+		size = 6,
+		aspect = 1.6,
 		fit_reg = False,
-		# legend = False,
+		# palette ='cubehelix',
+		hue_order = range(n_gears + 1)[::-1],
 		scatter_kws = {'marker' : 'D',
-						'alpha' : 0.4, 
+						'alpha' : 0.3, 
 						's' : 30
 						})
-	# plt.legend(title = 'Gear', bbox_to_anchor = (1.13, 1.))
+	axes = lm.axes
+	axes[0,0].set_ylim(0,)
+	# sns.despine(trim = True)
 	plt.title('CAR SPEED vs. ENGINE SPEED (by gears) : ' + time_period)
 	if savefig:
-		plt.savefig('images/' + time_period.replace('-', '') + '_' + 'clusteredgears.png')
+		plt.savefig('images/' + time_period.replace('-', '') + '_' + 'clusteredgears.png', bbox_inches = 'tight')
 	plt.show()
 	return
 
@@ -191,18 +195,19 @@ def phi_to_revpermeter(phi):
 
 def main(return_vals = False, write_data = False, savefig = False):
 	''' run from working directory of data'''
-
+	sns.set_style('whitegrid')
 	month = raw_input('Enter month number : [1, 2, ..., 12] : ') 
 	year = raw_input('Enter year (e.g. 2016) : ')
 	filename = find_month(month, year)
-	time_period = filename.split('.')[0] 
+	time_period = filename.split('/')[1].split('.')[0] 
 	original_df = load_month_data(filename)
 	visualize_df(original_df, time_period, 'original data', savefig = savefig)
 
-	df = clean_original(original_df)
-	visualize_df(df, time_period, 'on and moving', savefig = savefig)
-	rpm_ms = mean_shift_cluster(df, 'rpm')
-	df = filter_neutral(df, rpm_ms)
+	moving_df = clean_original(original_df)
+	visualize_df(moving_df, time_period, 'on and moving', savefig = savefig)
+	rpm_ms = mean_shift_cluster(moving_df, 'rpm')
+
+	df = filter_neutral(moving_df, rpm_ms)
 	visualize_df(df, time_period, 'non neutral rpm', savefig = savefig)
 	polar_df = make_polar_df(df)
 	visualize_polar_df(polar_df, time_period, 'unclustered polar', savefig = savefig)
@@ -212,8 +217,9 @@ def main(return_vals = False, write_data = False, savefig = False):
 	polar_df, lines = label_gears(polar_df, phi_ms, n_gears)
 	visualize_polar_df(polar_df, time_period, 'clustered polar', lines, savefig = savefig)
 
-	merged = df.merge(polar_df, how = 'right', left_index = True, right_index = True)
-	visualize_gears(merged, time_period)
+	merged = moving_df.merge(polar_df, how = 'left', left_index = True, right_index = True)
+	merged.loc[:,'gear'] = merged['gear'].fillna(0).astype(int)
+	visualize_gears(merged, time_period, n_gears)
 	revpermeter = np.array([phi_to_revpermeter(phi) for phi in lines])
 	tire_d = float(raw_input('Enter the tire diameter in inches : '))
 	print
@@ -225,13 +231,14 @@ def main(return_vals = False, write_data = False, savefig = False):
 	if axle_ratio:
 		axle_ratio = float(axle_ratio)
 	else:
-		axle_ratio = revperroll[3] # fourth gear is often 1:1
+		axle_ratio = revperroll[3] # fourth gear is most often 1:1
 	gear_ratios = revperroll/axle_ratio
 	print 'Best guesses for Gear Ratios:'
 	for g, r in enumerate(gear_ratios, 1):
 		print 'Gear %d : %.2f' % (g, r)
-	original_df.to_csv('pydata/' + time_period.replace('-', '') + '_' + 'originaldf.csv')
-	merged.to_csv('pydata/' + time_period.replace('-', '') + '_' + 'merged.csv')	
+	if write_data:
+		original_df.to_csv('pydata/' + time_period.replace('-', '') + '_' + 'originaldf.csv')
+		merged.to_csv('pydata/' + time_period.replace('-', '') + '_' + 'merged.csv')	
 	if return_vals:
 		return original_df, polar_df, merged, gear_ratios
 
