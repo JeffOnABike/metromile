@@ -1,12 +1,12 @@
 # Metromile Data Analysis
 
-## Guessing Gear Ratios [for manual transmission vehicles]
+## Guessing Gear Ratios 
 
 ### Overview
 
 The program ```guess_car_specs.py``` guesses the gear ratios in a vehicle's transmission based on a sample of its driving data. The driving data is collected via a device plugged in the OBD-II port and warehoused by Metromile (an insurance company) and is available to customers by request. 
 
-The program's underlying operation relies heavily on unsupervised machine learning clustering. The values of the gear ratios correspond to the N most prominent cluster centers where N is the number of gears (non-Reverse) in the vehicle's transmission. 
+The program's underlying operation relies heavily on an unsupervised machine learning clustering algorithm called 'mean shift'. The values of the gear ratios correspond to the N most prominent mean shift cluster centers where N is the number of gears (non-Reverse) in the vehicle's transmission. 
 
 ### Instructions
 
@@ -51,8 +51,6 @@ I found a reasonably credible place to crosscheck the program output with my veh
 
 
 ### Further Work 
-
-**The program is optimized for processing data from a manual transmission car.** Updates will be forthcoming after testing with samples from an automatic transmission car. 
 
 ![alt text](images/201608_clusteredgears.png)
 
